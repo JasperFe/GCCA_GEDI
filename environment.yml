@@ -1,0 +1,28 @@
+name: GCCA-GEDI
+channels:
+  - conda-forge
+dependencies:
+  - contextily
+  - geopandas
+  - folium
+  - h5py
+  - IPython
+  - matplotlib
+  - netCDF4
+  - numpy
+  - owslib
+  - pandas
+  - pydap
+  - rasterio
+  - rasterstats
+  - requests
+  - s3fs
+  - seaborn
+  - scipy
+  - shapely
+  - tabulate
+  - pip
+  - jupyterlab
+  - pip:
+    - harmony-py
+    - matplotlib_scalebar
