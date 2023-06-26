@@ -26,11 +26,11 @@ Voor verdere introductie tot Google Earth Engine, verwijs ik naar enkele handige
 De GEDI-datasets te gebruiken in Google Earth Engine zijn te vinden in de catalogus: [https://developers.google.com/earth-engine/datasets/tags/gedi](https://developers.google.com/earth-engine/datasets/tags/gedi)
 
 
-## Start-to-GEDI in Google
+# GEDI-dataset filteren, visualiseren en identificeren in Google Earth Engine
 
-### A. Visualisatie van GEDI Level 2A shots
+## A. Visualisatie van GEDI Level 2A shots
 
-#### Stap 1 - Inlezen van de GEDI-collectie: 
+### Stap 1 - Inlezen van de GEDI-collectie: 
 
 ```Javascript
 var GEDI_L2A = ee.ImageCollection('NASA/GEDI/Level2A'); 
@@ -48,11 +48,21 @@ Bekijk welke data voorhanden is:
 print('Banden aanwezig': GEDI_L2A.first().bandNames())
 ```
 
-#### Stap 2 - Collectie filteren op locatie en datum
+### Stap 2 - Collectie filteren op locatie en datum
 
-Subsetten van GEDI-gegevens: Filter de GEDI-gegevens op een bepaald gebied van belang (ROI) (zelf in te tekenen):
+Momenteel is de GEDI-collectie nog een globale dataset. We wensen dit verder te filteren, zodat we enkel de datatsets overhouden die ons studiegebied overlappen, en binnen de gewenste timeframe horen. Filter de GEDI-gegevens op een bepaald gebied van belang (ROI) (zelf in te tekenen):
 
- ROI = ee.Geometry.Rectangle([xmin, ymin, xmax, ymax]); // Vervang xmin, ymin, xmax, ymax met de coördinaten van je ROI
+### Region of Interest (ROI)
+
+Starten doen we met het intekenen van een gewenste **Region Of Interest** (ROI) in de Map View. Een ROI is niets anders dan de afbakening van het studiegebied, waarbinnen we onze data wensen te verkrijgen.  
+
+Er kan rechtstreeks gezoomd worden naar een locatie via de zoekbalk bovenaan of door het scrollen met de muis. Teken vervolgs een gewenste gebied in door gebruik te maken van de toolknoppen in de "Map View": ![](Images/GEE_knoppen.jpg){: style="height:25px"}.  
+
+In dit voorbeeld kiezen we voor een stukje van de kustlijn, ter hoogte van Saramacca.
+
+![](img/Geometry_draw.png)
+
+
 
 ```Javascript   
 var ROI = ee.FeatureCollection('projects/ee-mangroves-suriname/assets/ROI_Mangrove_2022').first()
