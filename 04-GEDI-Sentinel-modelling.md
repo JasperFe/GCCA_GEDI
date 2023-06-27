@@ -152,7 +152,7 @@ var predictedTraining = regression.sampleRegions({collection:validation, geometr
 // Separate the observed (rh98) and predicted (regression) properties
 var sampleTraining = predictedTraining.select(['predicted','rh98']);
 // Create chart, print it
-var chartTraining = ui.Chart.feature.byFeature(sampleTraining, 'predicted', 'rh95')
+var chartTraining = ui.Chart.feature.byFeature(sampleTraining, 'predicted', 'rh98')
 .setChartType('ScatterChart').setOptions({
 title: 'Predicted vs Observed - Training data ',
 hAxis: {title: 'observed', viewWindow: {min: 0, max: 50},},
