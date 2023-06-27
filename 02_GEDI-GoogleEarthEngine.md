@@ -48,36 +48,90 @@ Bekijk welke data voorhanden is:
 print('Banden aanwezig': GEDI_L2A.first().bandNames())
 ```
 
+
 ### Stap 2 - Collectie filteren op locatie en datum
 
 Momenteel is de GEDI-collectie nog een globale dataset. We wensen dit verder te filteren, zodat we enkel de datatsets overhouden die ons studiegebied overlappen, en binnen de gewenste timeframe horen. Filter de GEDI-gegevens op een bepaald gebied van belang (ROI) (zelf in te tekenen):
 
-### Region of Interest (ROI)
+#### Region of Interest (ROI) intekenen
 
 Starten doen we met het intekenen van een gewenste **Region Of Interest** (ROI) in de Map View. Een ROI is niets anders dan de afbakening van het studiegebied, waarbinnen we onze data wensen te verkrijgen.  
 
-Er kan rechtstreeks gezoomd worden naar een locatie via de zoekbalk bovenaan of door het scrollen met de muis. Teken vervolgs een gewenste gebied in door gebruik te maken van de toolknoppen in de "Map View": ![](Images/GEE_knoppen.jpg){: style="height:25px"}.  
+Er kan rechtstreeks gezoomd worden naar een locatie via de zoekbalk bovenaan of door het scrollen met de muis. Teken vervolgs een gewenste gebied in door gebruik te maken van de toolknoppen in de "Map View": ![](Images/GEE_knoppen.jpg).  
 
 In dit voorbeeld kiezen we voor een stukje van de kustlijn, ter hoogte van Saramacca.
 
 ![](img/Geometry_draw.png)
 
+De geometrie komt nu automatisch in de 'Imports' bovenaan je script terecht. Hier kun je de naam van de variabele tevens aanpassen naar bijvoorbeeld 'ROI' (Region Of Interest).
 
+Een andere optie; de 'Region of Interest' van de mangrove-zone aan de kustlijn intekenen?
 
 ```Javascript   
 var ROI = ee.FeatureCollection('projects/ee-mangroves-suriname/assets/ROI_Mangrove_2022').first()
-// Alleen elementen overlappend met ROI
-var GEDI_L2A = GEDI_L2A.filterBounds(ROI);
 
-// Temporeel Filteren: enkel datavan 2020 overhouden
+```
+#### filteren op basis van regio (ROI)
+
+Op basis van de ingetekende geometrie, kunnen we vervolgens de dataset gaan filteren op locatie. Hierbij worden alle GEDI-beelden die **overlappen** weerhouden. 
+
+```Javascript
+// Alleen de 'images' overlappend met de ROI worden weerhouden
+var GEDI_L2A = GEDI_L2A.filterBounds(ROI);
+```
+
+#### filteren op basis van datum
+
+Via de ```.filterDate()``` functie kunnen de beelden verder gefilterd worden op basis van data. 
+
+```Javascript
+// Temporeel Filteren: enkel de beelden binnen 2020 - 2021 behouden
 var  GEDI_L2A = GEDI_L2A.filterDate('2020-01-01','2021-12-31');
 ```
 
-Net zoals we bij de gedownloade data hebben gedaan, dienen we de shots ook **kwalitatief** te filteren, op basis van de attribuutdata.
+#### eerste visualisatie van de GEDI-shots
 
-Hiervoor schrijven we een functie die per beeld in de collectie de pixels filterts op basis van deze kwaliteitsnormen:
+We hebben ondertussen de GEDI-data gefilterd op basis van locatie en datum. We kunnen de resterende punten. Aangezien we nog over een **collectie** aan beelden (aggregatie van alle shots per maand) beschikken, dienen we dit eerst verder te reduceren naar één beeld.
+
+Dit kunnen we doen op basis van zogenaamde 'reducers' zoals ```.mean()```, ```.median()```, ```.sum()```. We kunnen er hierbij van uitgaan dat er op elke locatie slechts één shot beschikbaar is.
+
+Bij het plotten dienen we eerst de band (lees: de GEDI-metriek) die we wensen te visualiseren. Hier kiezen we voor de kroonhoogte, wat we gelijk stellen aan RH-waarde 98 (```rh98```).
+
 
 ```Javascript
+// 
+var visParams = {
+  min: 0,
+  max: 30,
+  palette: 'darkred,red,orange,green,darkgreen'
+};
+
+// Functie om een laag te visualiseren
+Map.addLayer(GEDI_L2A.select('rh98'), visParams, 'GEDI_L2A filtered')
+
+```
+
+Via de inspector: ![](img/inspector.png)), kun je de waarde individuele pixels gaan bekijken. 
+
+<div class="alert alert-success">
+
+**OEFENING**:
+
+Identificeer verschillende pixels overheen het studiegebied. Tracht hierbij af te wisselen tussen verschillende vegetatietypes (op basis van een Google beeld). Kloppen de kroonhoogtes (rh98) met wat je hier zou verwachten?
+
+</div>
+
+#### filteren op basis van 'shot'-kwaliteit
+
+Momenteel blijven er nog een relatief grote hoeveelheid aan puntdata over. Echter, niet elke 'GEDI'-waarde lijkt logisch.. Dit komt omdat er nog GEDI-shots aanwezig zijn met een slechte kwaliteit, als gevolg van een slecht signaal (door bijvoorbeeld zware wolken). Deze punten dienen we eerst nog uit de dataset te filteren.
+
+Net zoals we bij de gedownloade data hebben gedaan, filteren we de shots **kwalitatief** op basis van de aanwezige 'quality'-banden.
+
+Om voor elk overblijvend beeld in de ```Imagecollection``` de kwaliteitsfilter uit te voeren, schrijven we eerst een functie. Deze wordt daarna toegepast op de volledige collectie.
+
+```Javascript
+// Schrijven van kwaliteitsfilter
+
 var qualityMask = function(image) {
   return image
       // Op basis van de 'quality flag'
@@ -90,14 +144,15 @@ var qualityMask = function(image) {
        .updateMask(image.select('beam').gt(4));
 };
 
-// Mask toepassen op elk beeld in de collectie:
-var GEDI_L2A_filtered = GEDI_L2A.map(qualityMask);
+// Filter toepassen op elk beeld in de collectie. 
+// De .map() functie
+var GEDI_L2A = GEDI_L2A.map(qualityMask);
 ```
 
 
-#### Stap 3 - Eerste Visualisatie van de GEDI-shots
+#### Visualisatie van de finale GEDI-dataset
 
-In dit voorbeeld mappen we RH98 = de kroonhoogte voor het eerste beeld
+In dit voorbeeld mappen we opnieuw RH98 = de kroonhoogte voor het eerste beeld
 
 ```Javascript
 var visParams = {
@@ -106,196 +161,7 @@ var visParams = {
   palette: 'darkred,red,orange,green,darkgreen'
 };
 
-Map.addLayer(GEDI_L2A.first().select('rh98'), visParams, 'GEDI rh98 Jan 2020');
+Map.addLayer(GEDI_L2A.median().select('rh98'), visParams, 'GEDI rh98 2020/2021');
 ```
-#### Stap 4 - Data samenvoegen
-
-Momenteel hebben we nog een collectie met een GEDI-beeld per maand. Deze data wensen we te aggregeren via een 'reducer'. Voor de overblijvende shots (= pixels) maken we dus één beeld aan. 
-
-We kunnen er van uitgaan dat er geen overlappende pixels (dus shots) aanwezig zijn. Daarom zal zowel de ```.mean()`` als de ```.median()``` reducer hetzelfde resultaat opleveren
-
-
-```javascript
-var GEDI_L2A = GEDI_L2A.mean()
-
-Map.addLayer(Map.addLayer(GEDI_L2A.first().select('rh98'), visParams, 'GEDI rh98 2020/2021');
-```
-
-#### Stap 5: Toevoegen van Sentinel-1 en Sentinel-2 data
-
-Onderstaande code voegt een Sentinel-2 en Sentinel-1 beeld toe voor het studiegebied (ROI). Volgende zaken worden toegepast:
-
-* Gefilterd op het jaar 2021 en wolkbedekking van maximaal 50%
-* Wolken werden verwijderd
-* Voor Sentinel-1: 'speckle' filter toegepast.
-* Mediaan-reducer op resterende beelden
-
-Om aan 'rekenkracht' te besparen, laden we een reeds aangemaakt Sentinel-2 beeld voor 2021 in. Gezien deze al in de 'cloud' bestaat, moet Earth Engine geen extra achterliggende berekeningen uitvoeren, wat de looptijd grondig zal beperken.
-
-
-```Javascript
-var Sentinel_2021 = ee.Image('projects/ee-mangroves-suriname/assets/Sentinel_2021')
-
-// Visualisatie van een RGB-beeld:
-Map.addLayer(Sentinel_2021,{min:0, max:0.3, bands: ['B4','B3','B2']},'Sentinel 2021')
-```
-
-#### Stap 5 - GEDI/Sentinel-1/2 dataset opstellen
-
-Voor modelleren van de GEDI-afgeleide structuurdata (zoals RH95) functioneren de GEDI-shots als "dataset" voor het maken van een regressie. Hierbij delen we de dataset eerst op in een train- en validatieset, om de accuraatheid van het model na te gaan:
-
-```Javascript
-// We dienen onze GEDI-pixels om te zetten naar een ```FeatureCollection```, zodat we beschikken over een 'puntenset'
-
-//Via de .sample-functie, plaatsen we over elke pixel een punt
-var GEDI_L2A = GEDI_L2A.select('rh95').sample({
-  region: ROI,
-  scale: 25,
-  geometries: true
-})
-
-// Over hoeveel GEDI-punten beschikken we?
-print('Aantal GEDI-punten ': GEDI_L2A.size())
-
-```
-We beschikken nog over een gigantische dataset aan punten. Zelfs voor Google Earth Engine is dit veel (lees: je kunt elk punt wel gebruiken, maar hiervoor dien je te werken met een rechtstreekse 'export', wat enkele uren in beslag kan nemen). Om een snellere berekening mogelijk te maken, reduceren we deze set;
-
-```Javascript
-// Toevoegen van randomColumn
-var GEDI_L2A = GEDI_L2A.randomColumn('random')
-
-var GEDI_L2A = GEDI_L2A.filter(ee.Filter.lt('random',0.3))
-
-print(GEDI_L2A.size(), ' punten na reductie')
-```
-
-Vervolgens kunnen we de pixel-waarden uit de Sentinel-1/2 data toevoegen aan onze set d.m.v. SampleRegions. 
-
-```Javascript
-// Get bandNames
-var bands = Sentinel_2021.bandNames() 
-
-// Extract data
-var GEDI_S2 = Sentinel_2021.select(bands).sampleRegions({
-  collection: GEDI_L2A,
-  properties: ['rh95'],
-  scale: 25 ,
-  geometries : true,
-  });
-```
-
-Dit levert een nieuwe dataset op met volgende gegevens:
-
-```Javascript
-print('GEDI Dataset :' , GEDI_S2.propertyNames())
-```
-#### Stap 6: Dataset splitsen in train & validatie data
-
-Vervolgens kunnen we de datset opsplitsen in een training- en validatieset. Dit doen we eveneens door het toevoegen van een random kolom, waarop we de datset splitsen in 70% traindata en 30% validatiedata
-
-```Javascript
-// Toevoegen van randomColumn
-var GEDI_S2 = GEDI_S2.randomColumn('random2')
-
-// Opsplitsen
-var training = GEDI_S2.filter(ee.Filter.lt('random2',0.7))
-var validation = GEDI_S2.filter(ee.Filter.gte('random2',0.7))
-```
-
-#### Stap 7: Regressiemodel aanmaken
-
-Vervolgens komen we aan de kern van de oefening:
-
-We wensen een model te maken, waarbij de 'RH98'-attribuut van GEDI (= Kroonhoogte) wordt voorspeld door de Sentinel-1/2 banden. Onderstaande illustratie geeft dit visueel weer:
-
-![](img/gedi-concept.jpg)
-
-
-Dit doen we aan de hand van een Random Forest regressie-model.
-
-
-```Javascript
-// Build Random Forest regressor
-var classifier = ee.Classifier.smileRandomForest(100, null, 1, 0.5, null, 0)
-  .setOutputMode('REGRESSION')
-  .train({
-    features: training,
-    classProperty: 'rh95',
-    inputProperties: bands
-    });
-    
-  
-var regression = Sentinel_2021.select(bands).classify(classifier, 'predicted');
-
-var palettes = require('users/gena/packages:palettes');
-var palette = palettes.crameri.nuuk[25];
-
-// Display the input imagery and the regression classification.
-  // get dictionaries of min & max predicted value
-  var regressionMin = (regression.reduceRegion({
-    reducer: ee.Reducer.min(),
-    scale: 25, 
-    bestEffort: true,
-    tileScale: 5
-  }));
-  var regressionMax = (regression.reduceRegion({
-    reducer: ee.Reducer.max(),
-    scale: 25, 
-    bestEffort: true,
-    tileScale: 5
-  }));
-  
-// Add to map
-var viz = {palette: palette, min: regressionMin.getNumber('predicted').getInfo(), max: regressionMax.getNumber('predicted').getInfo()};
-Map.addLayer(regression, viz, 'Regression');
-
-```
-
-#### Stap 8: Evaluatie van het model
-Tot slot kunnen we het model evalueren op basis van de onafhankelijke validatie-dataset die we aanmaakten.
-
-Voor deze punten zullen we een predictie maken door het model, en deze vergelijken met de werkelijke waarde.
-
-Op basis van de afgeleide 'R2'-waarde krijgen we een beeld van hoe 'accuraat' de voorspelling is.
-
-```Javascript
-// Get predicted regression points in same location as training data
-var predictedTraining = regression.sampleRegions({collection:validation, geometries: true});
-// Separate the observed (REDOX_CM) and predicted (regression) properties
-var sampleTraining = predictedTraining.select(['predicted','rh95']);
-// Create chart, print it
-var chartTraining = ui.Chart.feature.byFeature(sampleTraining, 'predicted', 'rh95')
-.setChartType('ScatterChart').setOptions({
-title: 'Predicted vs Observed - Training data ',
-hAxis: {title: 'observed', viewWindow: {min: 0, max: 50},},
-vAxis: {title: 'predicted', viewWindow: {min: 0, max: 50},},
-pointSize: 3,
-trendlines: { 0: {showR2: true, visibleInLegend: true} ,
-1: {showR2: true, visibleInLegend: true}}});
-print(chartTraining);
-```
-
-#### Stap 9: Identificatie van de meest belangrijke banden
-
-```Javascript
-// Get variable importance
-var dict = classifier.explain();
-print("Classifier information:", dict);
-var variableImportance = ee.Feature(null, ee.Dictionary(dict).get('importance'));
-// Make chart, print it
-var chart =
-ui.Chart.feature.byProperty(variableImportance)
-.setChartType('ColumnChart')
-.setOptions({
-title: 'Random Forest Variable Importance',
-legend: {position: 'none'},
-hAxis: {title: 'Bands'},
-vAxis: {title: 'Importance'}
-});
-print(chart);
-```
-
-
-
 
 
