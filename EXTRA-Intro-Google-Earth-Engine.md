@@ -1,4 +1,3 @@
-
 ## De Google Earth Engine Interface
 
 <p align="center">
@@ -142,8 +141,12 @@ Een ```Image``` is rasterdata bestaande uit één of meerdere banden, waarvan el
 Om een Image in te laden en Earth Engine wordt gebruik gemaakt van ```ee.Image```. In volgend hoofdstuk wordt dit geïllustreerd. 
 
 
-
 ### ee.ImageCollection
 
 Een ```ImageCollection``` is een collectie van meerdere ```Image```'s. De <a href="https://developers.google.com/earth-engine/datasets/catalog/COPERNICUS_S2_SR" target="_blank">Sentinel-2 MSI Level-2A collectie</a> bevat bijvoorbeeld het volledige aanbod aan atmosferisch gecorrigeerde Sentinel-2 beelden. Elke collectie bevat verdere informatie in de Data Catalog. Een collectie is steeds in een bepaalde volgorde gesorteerd zijn. Standaard is dit o.b.v. datum, maar aangepaste sorteringen zijn eveneens mogelijk, zoals we in een komende oefening gaan zien.
+
+## De Earth Engine Data Catalog
+
+Om het aanbod aan aardobservatie-data in Google Earth Engine te bekijken en te doorzoeken, kan gebruik gemaakt worden van de Earth Engine Data Catalog: [https://developers.google.com/earth-engine/datasets](https://developers.google.com/earth-engine/datasets). Via deze catalogus kun je eenvoudig rasterdata allerhande opzoeken: satellietdata, weerdata, terreindata, populatiedata,... Via de catalogus vindt je ook de noodzakelijke code om de beeldensets in je script te importeren vinden.
+
 
