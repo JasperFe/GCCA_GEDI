@@ -165,3 +165,15 @@ Map.addLayer(GEDI_L2A.median().select('rh98'), visParams, 'GEDI rh98 2020/2021')
 ```
 
 
+## Opdracht
+
+In bovenstaand voorbeeld filterden en visualiseerden we de GEDI-LEVEL-2A dataset. Dezelfde stappen kunnen we ook gebruiken om de LEVEL-4 biomassa waarden te gaan filteren en visualiseren.
+De collectie GEDI-level 4 is te vinden onder de volgende collectie: [https://developers.google.com/earth-engine/datasets/catalog/LARSE_GEDI_GEDI04_A_002_MONTHLY](https://developers.google.com/earth-engine/datasets/catalog/LARSE_GEDI_GEDI04_A_002_MONTHLY).
+
+Tracht ook deze shots te visualiseren en te filteren. Je kunt hiervoor de ```agbd```-band gebruiken om de visualisatie uit te voeren. Om de volledige collectie in te laden maak je gebruik van volgende code:
+
+```Javascript
+var GEDI_L4 = ee.ImageCollection("LARSE/GEDI/GEDI04_A_002_MONTHLY") 
+```
+
+Vervolgens kun je dezelfte filter-stappen toepassen.
