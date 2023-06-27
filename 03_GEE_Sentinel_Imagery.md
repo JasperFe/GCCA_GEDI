@@ -223,7 +223,52 @@ var S1_VV = ee.ImageCollection('COPERNICUS/S1_GRD')
  var desc = S1_VV.filter(ee.Filter.eq('orbitProperties_pass', 'DESCENDING'));
 
 var imgVV_2021 = desc.mean().focal_mean(smoothing_radius, 'circle', 'meters').select('VV');
+var imgVH_2021 = desc.mean().focal_mean(smoothing_radius, 'circle', 'meters').select('VH');
+
 Map.addLayer(imgVV_2021,{min:-23,max:0}'VV 2021')
             
 ```
 
+
+#### Samenvoegen van Sentinel-1 en Sentinel-2 banden
+
+Tot slot wensen we onze Sentinel-1 en Sentinel-2 data samen te voegen tot één grote banden-"stack". In GEE doe je dit via de ```.addBands()``` functie:
+
+```Javascript
+var Sentinel_2021 = SenS2_im.addBands(imgVV_2021).addBands(img_VH_2021)
+
+```
+
+#### Exporteren van data naar een Asset
+
+Een "Asset" is een opgeslagen raster of vectorbestand op de Google cloud. Elke dataset die je aanmaakt kun je zo exporteren, waarna deze beschikbaar blijft voor andere projecten.
+
+Een voordeel van deze methode is dat de hele 'processing'-keten voor het aanmaken van het beeld niet meer hoeft te gebeuren, waardoor ook de processing-stappen sneller zullen gaan bij het gebruiken van dit beeld.
+
+Om een beeld op te slaan naar een Asset:
+
+
+```Javascript
+Export.image.toAsset({
+  image: Sentinel_2021, // Het beeld dat je hebt aangemaakt
+  description: 'Sentinel_2021', // Beschrijving
+  scale: 10,  // Resolutie waarin je het wenst te exporteren
+  maxPixels: 1e13,  // Rekenkracht verhogen
+  region: ROI, 
+  crs: "EPSG:32621" // Coordinatensysteem waarin de data geëxporteerd dient te worden
+})
+```
+
+Op een gelijke manier kun je ook data exporteren naar je Google Drive, als bijvoorbeeld een ```.tif```-file. Dit kun je dan verder gebruiken binnen andere GIS-software, zoals QGIS,...
+
+
+```Javascript
+Export.image.toDrive({
+  image: Sentinel_2021, // Het beeld dat je hebt aangemaakt
+  description: 'Sentinel_2021', // Beschrijving
+  scale: 10,  // Resolutie waarin je het wenst te exporteren
+  maxPixels: 1e13,  // Rekenkracht verhogen
+  region: ROI, 
+  folder : 'GEE exports', // Folder op je Google Drive (wordt aangemaakt indien deze nog niet bestaat)
+  crs: "EPSG:32621" // Coordinatensysteem waarin de data geëxporteerd dient te worden
+})
