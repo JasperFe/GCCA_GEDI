@@ -149,8 +149,8 @@ Op basis van de afgeleide 'R2'-waarde krijgen we een beeld van hoe 'accuraat' de
 ```Javascript
 // Get predicted regression points in same location as training data
 var predictedTraining = regression.sampleRegions({collection:validation, geometries: true});
-// Separate the observed (REDOX_CM) and predicted (regression) properties
-var sampleTraining = predictedTraining.select(['predicted','rh95']);
+// Separate the observed (rh98) and predicted (regression) properties
+var sampleTraining = predictedTraining.select(['predicted','rh98']);
 // Create chart, print it
 var chartTraining = ui.Chart.feature.byFeature(sampleTraining, 'predicted', 'rh95')
 .setChartType('ScatterChart').setOptions({
